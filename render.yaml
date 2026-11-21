@@ -8,16 +8,30 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: yumaplayer-chat-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
       - key: CORS_ORIGIN
         sync: false
-
-databases:
-  - name: yumaplayer-chat-db
-    databaseName: yumaplayer_chat
-    user: yumaplayer
-    plan: free
+      - key: NEON_AUTH_BASE_URL
+        sync: false
+      - key: NEON_AUTH_JWKS_URL
+        sync: false
+      - key: AWS_ENDPOINT_URL_S3
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: NEON_OBJECT_STORAGE_BUCKET
+        sync: false
+      - key: NEON_FUNCTION_HOST_SUFFIX
+        sync: false
+      - key: NEON_BRANCH_ID
+        sync: false
+      - key: NEON_REALTIME_URL
+        sync: false
+      - key: NEON_REALTIME_SECRET
+        sync: false

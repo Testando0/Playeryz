@@ -40,11 +40,14 @@ A entrega do chat em tempo real continua usando o WebSocket próprio (`/v1/ws`),
 1. Faça push deste repositório para o GitHub.
 2. No Render, selecione **New → Blueprint** e conecte o repositório.
 3. O Render detectará o arquivo `/render.yaml`.
-4. Confirme a criação do serviço `yumaplayer-chat` e do banco `yumaplayer-chat-db`.
-5. Preencha `CORS_ORIGIN` com os clientes autorizados, ou deixe vazio durante o desenvolvimento.
-6. Depois do deploy, teste `https://SEU-SERVICO.onrender.com/health`.
+4. Confirme somente a criação do Web Service `yumaplayer-chat` com o plano **Free**. Este Blueprint não cria banco Render.
+5. Preencha as variáveis solicitadas pelo Blueprint usando os valores do `.env.local` gerado pelo Neon. `DATABASE_URL` e `JWT_SECRET` são obrigatórias; as demais habilitam Auth, Object Storage, Functions e Realtime.
+6. Preencha `CORS_ORIGIN` com os clientes autorizados, ou deixe vazio durante o desenvolvimento.
+7. Depois do deploy, teste `https://SEU-SERVICO.onrender.com/health`.
 
-O Blueprint gera automaticamente `JWT_SECRET` e injeta `DATABASE_URL` do PostgreSQL. Não coloque esses valores no GitHub. Para usar o Neon no Render, configure as variáveis não secretas e secretas do `.env.local` no painel do serviço, sem publicar o arquivo.
+O banco continua sendo o PostgreSQL do Neon, que é o armazenamento persistente do chat. Não use o PostgreSQL Free do Render, pois ele expira após 30 dias. Nunca coloque `.env.local`, API keys ou qualquer secret no GitHub; configure-os apenas nas Environment Variables do serviço Render.
+
+O serviço Free do Render pode dormir após um período sem tráfego e levar cerca de um minuto para acordar. Isso não apaga o histórico, porque as mensagens ficam no Neon; apenas pode atrasar a primeira conexão do WebSocket.
 
 ## Desenvolvimento local
 
