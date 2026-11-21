@@ -47,6 +47,7 @@ import moe.rukamori.archivetune.ui.menu.player.PlayerMenuEqualizerDialog
 import moe.rukamori.archivetune.ui.menu.player.PlayerMenuHeader
 import moe.rukamori.archivetune.ui.menu.player.PlayerMenuSelectArtistDialog
 import moe.rukamori.archivetune.ui.menu.player.PlayerVolumeCard
+import moe.rukamori.archivetune.ui.menu.player.ChatShareDialog
 import moe.rukamori.archivetune.ui.menu.player.rememberPlayerMenuSplitArtists
 import moe.rukamori.archivetune.ui.player.rememberDeviceMusicVolumeController
 import moe.rukamori.archivetune.ui.theme.LocalYumaColors
@@ -111,6 +112,17 @@ fun PlayerMenu(
     var showSelectArtistDialog by rememberSaveable { mutableStateOf(false) }
     var showPitchTempoDialog by rememberSaveable { mutableStateOf(false) }
     var showEqualizerDialog by rememberSaveable { mutableStateOf(false) }
+    var showSendToChatDialog by rememberSaveable { mutableStateOf(false) }
+    if (showSendToChatDialog) {
+        ChatShareDialog(
+            title = mediaMetadata.title,
+            artist = mediaMetadata.artists.joinToString(" • ") { it.name },
+            album = mediaMetadata.album?.title,
+            trackId = mediaMetadata.id,
+            coverUrl = mediaMetadata.thumbnailUrl,
+            onDismiss = { showSendToChatDialog = false },
+        )
+    }
 
     PlayerMenuAddToPlaylistDialog(
         isVisible = showChoosePlaylistDialog,
@@ -196,6 +208,9 @@ fun PlayerMenu(
                     onRemoveFromQueue = onRemoveFromQueue,
                     onSpeedDialSongIdsChange = onSpeedDialSongIdsChange,
                     onShowChoosePlaylistDialog = { showChoosePlaylistDialog = true },
+                    onShowSendToChatDialog = {
+                        showSendToChatDialog = true
+                    },
                     onShowSelectArtistDialog = { showSelectArtistDialog = true },
                     onShowDetailsDialog = onShowDetailsDialog,
                     onShowEqualizerDialog = { showEqualizerDialog = true },

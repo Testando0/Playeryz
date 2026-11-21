@@ -58,13 +58,11 @@ import moe.rukamori.archivetune.chat.ChatUiState
 import moe.rukamori.archivetune.chat.ChatViewModel
 import moe.rukamori.archivetune.models.ParsedIntentAction
 import moe.rukamori.archivetune.ui.PlayerViewModel
-import moe.rukamori.archivetune.ui.state.PlayerUiState
 
 @Composable
 internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel = hiltViewModel()) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
     val playerViewModel: PlayerViewModel = hiltViewModel()
-    val playerState = playerViewModel.uiState.collectAsStateWithLifecycle().value
     val clipboard = LocalClipboardManager.current
     Scaffold(
         topBar = {
@@ -100,7 +98,7 @@ internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel =
         },
     ) { padding ->
         if (!state.loggedIn) LoginContent(state, viewModel, Modifier.padding(padding))
-        else ChatContent(state, viewModel, playerViewModel, playerState, Modifier.padding(padding))
+        else ChatContent(state, viewModel, playerViewModel, Modifier.padding(padding))
     }
 }
 
@@ -127,9 +125,9 @@ private fun LoginContent(state: ChatUiState, viewModel: ChatViewModel, modifier:
 }
 
 @Composable
-private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, playerState: PlayerUiState, modifier: Modifier) {
+private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, modifier: Modifier) {
     if (state.selected == null) ConversationList(state, viewModel, modifier)
-    else ConversationDetail(state, viewModel, playerViewModel, playerState, modifier)
+    else ConversationDetail(state, viewModel, playerViewModel, modifier)
     if (state.showCreateDialog) CreateConversationDialog(state, viewModel)
     if (state.showAddMemberDialog) AddMemberDialog(state, viewModel)
 }
@@ -137,14 +135,12 @@ private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerView
 @Composable
 private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
     Column(modifier.fillMaxSize()) {
-        Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp))
         if (state.conversations.isEmpty()) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.independent_chat_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.independent_chat_no_conversations), modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium)
             }
         } else {
-            Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
             LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(state.conversations, key = { it.id }) { conversation -> ConversationRow(conversation, state.username, state.unreadByConversation[conversation.id] ?: 0) { viewModel.selectConversation(conversation) } }
             }
@@ -154,7 +150,7 @@ private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modif
 }
 
 @Composable
-private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, playerState: PlayerUiState, modifier: Modifier) {
+private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, modifier: Modifier) {
     val conversation = state.selected ?: return
     Column(modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -192,9 +188,6 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
             }
         }
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.sendCurrentTrack(playerState.title, playerState.artist, playerState.album, playerState.trackUrl, playerState.coverUrl) }, enabled = playerState.trackUrl.isNotBlank()) {
-                Icon(painterResource(R.drawable.music_note), contentDescription = stringResource(R.string.independent_chat_share_music))
-            }
             OutlinedTextField(value = state.draft, onValueChange = viewModel::updateDraft, placeholder = { Text(stringResource(R.string.independent_chat_message_hint)) }, singleLine = true, shape = RoundedCornerShape(24.dp), modifier = Modifier.weight(1f))
             TextButton(onClick = viewModel::send, enabled = state.draft.isNotBlank(), modifier = Modifier.padding(start = 4.dp)) { Text(stringResource(R.string.independent_chat_send)) }
         }

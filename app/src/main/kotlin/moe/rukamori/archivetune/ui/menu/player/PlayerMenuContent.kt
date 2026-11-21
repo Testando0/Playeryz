@@ -50,6 +50,7 @@ internal fun PlayerMenuContent(
     onRemoveFromQueue: (() -> Unit)?,
     onSpeedDialSongIdsChange: (String) -> Unit,
     onShowChoosePlaylistDialog: () -> Unit,
+    onShowSendToChatDialog: () -> Unit,
     onShowSelectArtistDialog: () -> Unit,
     onShowDetailsDialog: () -> Unit,
     onShowEqualizerDialog: () -> Unit,
@@ -82,6 +83,7 @@ internal fun PlayerMenuContent(
                 context = context,
                 onSpeedDialSongIdsChange = onSpeedDialSongIdsChange,
                 onShowChoosePlaylistDialog = onShowChoosePlaylistDialog,
+                onShowSendToChatDialog = onShowSendToChatDialog,
                 onDismiss = onDismiss,
             )
         }

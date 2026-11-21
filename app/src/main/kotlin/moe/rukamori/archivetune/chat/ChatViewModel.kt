@@ -181,6 +181,16 @@ internal class ChatViewModel @Inject constructor(
         }
     }
 
+    fun sendTrackToConversations(conversationIds: List<String>, title: String, artist: String, album: String?, trackId: String, coverUrl: String?) {
+        if (conversationIds.isEmpty() || trackId.isBlank() || title.isBlank()) return
+        val track = ChatTrack(trackId, title, artist, album, coverUrl)
+        viewModelScope.launch {
+            runCatching {
+                conversationIds.forEach { conversationId -> repository.sendMessage(conversationId, "", track) }
+            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Não foi possível compartilhar a música") }
+        }
+    }
+
     private fun updateConversationPreview(message: ChatMessage) {
         val preview = message.track?.title ?: message.body
         _state.value = _state.value.copy(conversations = _state.value.conversations.map { conversation ->
