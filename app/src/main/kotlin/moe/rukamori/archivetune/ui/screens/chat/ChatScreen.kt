@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -42,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -208,7 +210,13 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(0, 10.dp.roundToPx()) }
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             OutlinedTextField(value = state.draft, onValueChange = viewModel::updateDraft, placeholder = { Text(stringResource(R.string.independent_chat_message_hint)) }, singleLine = true, shape = RoundedCornerShape(24.dp), modifier = Modifier.weight(1f))
             TextButton(onClick = viewModel::send, enabled = state.draft.isNotBlank(), modifier = Modifier.padding(start = 4.dp)) { Text(stringResource(R.string.independent_chat_send)) }
         }
