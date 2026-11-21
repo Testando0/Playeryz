@@ -54,7 +54,7 @@ android {
         minSdk = 26
         targetSdk = 37
         versionCode = 8
-        versionName = "1.2.0-RC.3"
+        versionName = "1.2.0-RC.5"
 
         manifestPlaceholders["appName"] = "@string/app_name"
 
@@ -119,7 +119,7 @@ android {
         val chatApiBaseUrl =
             localProperties.getProperty("CHAT_API_BASE_URL")
                 ?: System.getenv("CHAT_API_BASE_URL")
-                ?: "https://yumaplayer-chat.onrender.com"
+                ?: "https://chatrm-eqjs.onrender.com"
         buildConfigField("String", "CHAT_API_BASE_URL", "\"$chatApiBaseUrl\"")
         buildConfigField("String", "DISTRIBUTION", "\"gms\"")
         buildConfigField("boolean", "UPDATER_AVAILABLE", "true")
