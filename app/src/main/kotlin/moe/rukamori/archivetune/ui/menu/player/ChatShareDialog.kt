@@ -85,5 +85,5 @@ internal fun ChatShareDialog(
 
 private fun ChatConversation.displayTitle(selfUsername: String): String {
     title?.takeIf { it.isNotBlank() }?.let { return it }
-    return members.firstOrNull { it.username != selfUsername }?.let { "@${it.username}" } ?: "Conversation"
+    return members.firstOrNull { it.username != selfUsername }?.let { "@${it.username}" } ?: "Conversa"
 }

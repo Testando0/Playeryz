@@ -88,7 +88,7 @@ internal class ChatViewModel @Inject constructor(
             runCatching { repository.me() }.onSuccess { user ->
                 _state.value = _state.value.copy(loggedIn = true, username = user.username, displayName = user.displayName, userId = user.id)
                 refresh()
-            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Could not load your chat profile") }
+            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Não foi possível carregar seu perfil do chat") }
         }
     }
 
@@ -126,11 +126,11 @@ internal class ChatViewModel @Inject constructor(
         val snapshot = _state.value
         val members = snapshot.createMembers.split(',', '\n', ' ', ';').map { it.trim().removePrefix("@").lowercase() }.filter { it.isNotBlank() }.distinct()
         if (snapshot.createGroup && snapshot.createTitle.isBlank()) {
-            _state.value = snapshot.copy(error = "Enter a group name")
+            _state.value = snapshot.copy(error = "Digite o nome do grupo")
             return
         }
         if (members.isEmpty()) {
-            _state.value = snapshot.copy(error = "Enter at least one friend's username")
+            _state.value = snapshot.copy(error = "Digite pelo menos um nome de usuário")
             return
         }
         viewModelScope.launch {
@@ -140,7 +140,7 @@ internal class ChatViewModel @Inject constructor(
                     _state.value = _state.value.copy(loading = false, showCreateDialog = false, createTitle = "", createMembers = "")
                     refresh()
                     selectConversation(conversation)
-                }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Could not create conversation") }
+                }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Não foi possível criar a conversa") }
         }
     }
 
@@ -149,11 +149,11 @@ internal class ChatViewModel @Inject constructor(
         val conversation = snapshot.selected ?: return
         val username = snapshot.addMemberUsername.trim().removePrefix("@").lowercase()
         if (conversation.kind != "group") {
-            _state.value = snapshot.copy(error = "Only groups can have more members")
+            _state.value = snapshot.copy(error = "Somente grupos podem ter mais membros")
             return
         }
         if (username.isBlank()) {
-            _state.value = snapshot.copy(error = "Enter your friend's username")
+            _state.value = snapshot.copy(error = "Digite o nome de usuário do seu amigo")
             return
         }
         viewModelScope.launch {
@@ -161,7 +161,7 @@ internal class ChatViewModel @Inject constructor(
             runCatching { repository.addMember(conversation.id, username) }.onSuccess { updated ->
                 _state.value = _state.value.copy(loading = false, showAddMemberDialog = false, addMemberUsername = "", selected = updated)
                 refresh()
-            }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Could not add member") }
+            }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Não foi possível adicionar o membro") }
         }
     }
 
@@ -186,7 +186,7 @@ internal class ChatViewModel @Inject constructor(
             runCatching { repository.sendMessage(conversation.id, "", ChatTrack(trackId, title, artist, album, coverUrl)) }.onSuccess { message ->
                 updateConversationPreview(message)
                 if (_state.value.messages.none { it.id == message.id }) _state.value = _state.value.copy(messages = _state.value.messages + message)
-            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Could not share this song") }
+            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Não foi possível compartilhar esta música") }
         }
     }
 

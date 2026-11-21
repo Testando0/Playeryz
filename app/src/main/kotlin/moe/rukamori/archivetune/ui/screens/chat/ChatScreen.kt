@@ -197,7 +197,6 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
                                         Column(Modifier.weight(1f).padding(start = 8.dp)) {
                                             Text(track.title, fontWeight = FontWeight.SemiBold)
                                             track.artist?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                                            Text(stringResource(R.string.independent_chat_play_track), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                                         }
                                         IconButton(onClick = { playerViewModel.handleDeepLinkAction(ParsedIntentAction.YouTubeVideo(track.id, null)) }) {
                                             Icon(painterResource(R.drawable.play), contentDescription = stringResource(R.string.independent_chat_play_track_button))
@@ -287,5 +286,5 @@ private fun BoxAvatar(letter: String, modifier: Modifier) {
 private fun conversationTitle(conversation: ChatConversation, selfUsername: String = ""): String {
     if (!conversation.title.isNullOrBlank()) return conversation.title
     val other = conversation.members.firstOrNull { it.username != selfUsername }
-    return other?.displayName?.ifBlank { "@${other.username}" } ?: other?.username?.let { "@$it" } ?: "Conversation"
+    return other?.displayName?.ifBlank { "@${other.username}" } ?: other?.username?.let { "@$it" } ?: "Conversa"
 }
