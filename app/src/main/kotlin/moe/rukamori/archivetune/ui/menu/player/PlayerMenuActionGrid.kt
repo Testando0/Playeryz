@@ -116,22 +116,20 @@ internal fun PlayerMenuActionGrid(
                             },
                         ),
                     )
-                    if (!isLocalMedia) {
-                        add(
-                            NewAction(
-                                icon = {
-                                    Icon(
-                                        painter = painterResource(R.drawable.music_note),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                },
-                                text = stringResource(R.string.independent_chat_send_song),
-                                onClick = onShowSendToChatDialog,
-                            ),
-                        )
-                    }
+                    add(
+                        NewAction(
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.music_note),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(28.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            text = stringResource(R.string.independent_chat_send_song),
+                            onClick = onShowSendToChatDialog,
+                        ),
+                    )
                     add(
                         if (isLocalMedia) {
                             NewAction(
