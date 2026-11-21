@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: yumaplayer-chat
+    runtime: docker
+    dockerfilePath: ./chat-server/Dockerfile
+    dockerContext: ./chat-server
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yumaplayer-chat-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+
+databases:
+  - name: yumaplayer-chat-db
+    databaseName: yumaplayer_chat
+    user: yumaplayer
+    plan: free
