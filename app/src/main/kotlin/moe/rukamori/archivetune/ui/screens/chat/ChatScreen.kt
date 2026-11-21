@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -26,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import moe.rukamori.archivetune.R
+import moe.rukamori.archivetune.LocalPlayerAwareWindowInsets
 import moe.rukamori.archivetune.chat.ChatConversation
 import moe.rukamori.archivetune.chat.ChatUiState
 import moe.rukamori.archivetune.chat.ChatViewModel
@@ -70,9 +72,21 @@ internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel =
         topBar = {
             TopAppBar(
                 title = {
-                    if (state.loggedIn) {
-                        Text(if (state.selected == null) "@${state.username}" else conversationTitle(state.selected, state.username), fontWeight = FontWeight.SemiBold)
-                    } else Text(stringResource(R.string.independent_chat_title))
+                    if (!state.loggedIn) {
+                        Text(stringResource(R.string.independent_chat_title))
+                    } else if (state.selected == null) {
+                        Text("@${state.username}", fontWeight = FontWeight.SemiBold)
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(conversationTitle(state.selected, state.username), Modifier.size(38.dp))
+                            Text(
+                                conversationTitle(state.selected, state.username),
+                                modifier = Modifier.padding(start = 10.dp),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { if (state.selected != null) viewModel.clearSelection() else navController.navigateUp() }) {
@@ -92,6 +106,9 @@ internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel =
                         DropdownMenu(expanded = state.showActionsMenu, onDismissRequest = viewModel::closeActionsMenu) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_new_private)) }, onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(false) })
                             DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_new_group)) }, onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(true) })
+                            if (state.selected?.kind == "group") {
+                                DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_add_member)) }, onClick = { viewModel.closeActionsMenu(); viewModel.openAddMemberDialog() })
+                            }
                             DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_logout), color = MaterialTheme.colorScheme.error) }, onClick = { viewModel.closeActionsMenu(); viewModel.logout() })
                         }
                     }
@@ -128,8 +145,10 @@ private fun LoginContent(state: ChatUiState, viewModel: ChatViewModel, modifier:
 
 @Composable
 private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, modifier: Modifier) {
-    if (state.selected == null) ConversationList(state, viewModel, modifier)
-    else ConversationDetail(state, viewModel, playerViewModel, modifier)
+    val playerAwareBottomPadding = LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Bottom)
+    val contentModifier = modifier.windowInsetsPadding(playerAwareBottomPadding)
+    if (state.selected == null) ConversationList(state, viewModel, contentModifier)
+    else ConversationDetail(state, viewModel, playerViewModel, contentModifier)
     if (state.showCreateDialog) CreateConversationDialog(state, viewModel)
     if (state.showAddMemberDialog) AddMemberDialog(state, viewModel)
 }
@@ -161,15 +180,6 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
         }
     }
     Column(modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Avatar(conversationTitle(conversation, state.username), Modifier.size(42.dp))
-            Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(conversationTitle(conversation, state.username), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(if (conversation.kind == "group") "${conversation.members.size} members" else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall)
-            }
-            if (conversation.kind == "group") TextButton(onClick = viewModel::openAddMemberDialog) { Text(stringResource(R.string.independent_chat_add_member)) }
-        }
-        HorizontalDivider()
         LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp), reverseLayout = false) {
             items(state.messages, key = { it.id }) { message ->
                 val mine = message.senderUsername == state.username
@@ -198,7 +208,7 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(value = state.draft, onValueChange = viewModel::updateDraft, placeholder = { Text(stringResource(R.string.independent_chat_message_hint)) }, singleLine = true, shape = RoundedCornerShape(24.dp), modifier = Modifier.weight(1f))
             TextButton(onClick = viewModel::send, enabled = state.draft.isNotBlank(), modifier = Modifier.padding(start = 4.dp)) { Text(stringResource(R.string.independent_chat_send)) }
         }
@@ -247,7 +257,7 @@ private fun ConversationRow(conversation: ChatConversation, selfUsername: String
             Avatar(conversationTitle(conversation, selfUsername), Modifier.size(50.dp))
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(conversationTitle(conversation, selfUsername), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(conversation.lastMessagePreview ?: if (conversation.kind == "group") stringResource(R.string.independent_chat_group) else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                Text(conversation.lastMessagePreview ?: stringResource(R.string.independent_chat_no_messages), style = MaterialTheme.typography.bodySmall, maxLines = 1)
             }
             if (unreadCount > 0) Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text(unreadCount.coerceAtMost(99).toString(), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelSmall) } }
         }

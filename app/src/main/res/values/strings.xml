@@ -302,6 +302,7 @@
     <string name="independent_chat_conversation">Conversation</string>
     <string name="independent_chat_group">Group</string>
     <string name="independent_chat_private">Private conversation</string>
+    <string name="independent_chat_no_messages">No messages yet</string>
     <string name="independent_chat_new">New</string>
     <string name="independent_chat_your_id">Your chat ID</string>
     <string name="independent_chat_share_id">Share this username with friends so they can add you.</string>
