@@ -158,7 +158,12 @@ private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerView
 @Composable
 private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
     Column(modifier.fillMaxSize()) {
-        if (state.conversations.isEmpty()) {
+        Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp))
+        if (state.loading && state.conversations.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(56.dp), strokeWidth = 4.dp)
+            }
+        } else if (state.conversations.isEmpty()) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.independent_chat_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.independent_chat_no_conversations), modifier = Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium)
