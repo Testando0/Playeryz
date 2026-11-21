@@ -50,11 +50,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-    applicationId = "re.muwmix.yumaplayer"
+    applicationId = "com.Redzin.REDMUSIC"
         minSdk = 26
         targetSdk = 37
         versionCode = 8
-        versionName = "1.2.0-RC.5"
+        versionName = "1.2.0-RC.7"
 
         manifestPlaceholders["appName"] = "@string/app_name"
 
