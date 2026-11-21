@@ -264,6 +264,7 @@
     <string name="together_unknown_participant">Someone</string>
     <string name="together_allow_chat">Allow chat</string>
     <string name="together_chat_title">Room chat</string>
+    <string name="together_chat_menu_title">Chat</string>
     <plurals name="together_chat_subtitle">
         <item quantity="one">%1$d message in this room</item>
         <item quantity="other">%1$d messages in this room</item>

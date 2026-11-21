@@ -28,6 +28,7 @@ fun HomeTopBarAccountMenu(
     hasUpdate: Boolean,
     onNavigateProfile: () -> Unit,
     onNavigateHistory: () -> Unit,
+    onNavigateChat: () -> Unit,
     onNavigateNews: () -> Unit,
     onNavigateNewRelease: () -> Unit,
     onNavigateSettings: () -> Unit,
@@ -68,6 +69,10 @@ fun HomeTopBarAccountMenu(
                 onNavigateHistory = {
                     expanded = false
                     onNavigateHistory()
+                },
+                onNavigateChat = {
+                    expanded = false
+                    onNavigateChat()
                 },
                 onNavigateNews = {
                     expanded = false

@@ -46,6 +46,7 @@ internal fun TopBarAccountMenuContent(
     accountName: String,
     onNavigateProfile: () -> Unit,
     onNavigateHistory: () -> Unit,
+    onNavigateChat: () -> Unit,
     onNavigateNews: () -> Unit,
     onNavigateNewRelease: () -> Unit,
     onNavigateSettings: () -> Unit,
@@ -143,6 +144,12 @@ internal fun TopBarAccountMenuContent(
         icon = painterResource(R.drawable.history),
         title = stringResource(R.string.history),
         onClick = onNavigateHistory,
+    )
+
+    TopBarDropdownMenuItem(
+        icon = painterResource(R.drawable.queue_music),
+        title = stringResource(R.string.together_chat_menu_title),
+        onClick = onNavigateChat,
     )
 
     TopBarDropdownMenuItem(
