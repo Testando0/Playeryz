@@ -26,6 +26,7 @@ internal data class ChatUiState(
     val createMembers: String = "",
     val showAddMemberDialog: Boolean = false,
     val addMemberUsername: String = "",
+    val showActionsMenu: Boolean = false,
     val loading: Boolean = false,
     val error: String? = null,
 )
@@ -54,6 +55,9 @@ internal class ChatViewModel @Inject constructor(
     fun closeCreateDialog() { _state.value = _state.value.copy(showCreateDialog = false, error = null) }
     fun openAddMemberDialog() { _state.value = _state.value.copy(showAddMemberDialog = true, error = null) }
     fun closeAddMemberDialog() { _state.value = _state.value.copy(showAddMemberDialog = false, error = null) }
+    fun openActionsMenu() { _state.value = _state.value.copy(showActionsMenu = true) }
+    fun closeActionsMenu() { _state.value = _state.value.copy(showActionsMenu = false) }
+    fun clearSelection() { _state.value = _state.value.copy(selected = null, messages = emptyList(), error = null) }
 
     fun authenticate() {
         val snapshot = _state.value
@@ -92,7 +96,7 @@ internal class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
             runCatching { repository.conversations() }.onSuccess { conversations ->
-                val selected = _state.value.selected?.let { old -> conversations.firstOrNull { it.id == old.id } } ?: conversations.firstOrNull()
+                val selected = _state.value.selected?.let { old -> conversations.firstOrNull { it.id == old.id } }
                 _state.value = _state.value.copy(loading = false, conversations = conversations, selected = selected)
                 selected?.let(::selectConversation)
             }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Não foi possível carregar as conversas") }

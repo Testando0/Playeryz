@@ -316,6 +316,10 @@
     <string name="independent_chat_add_member">Add member</string>
     <string name="independent_chat_add_member_description">Enter the username your friend shared with you.</string>
     <string name="independent_chat_add">Add</string>
+    <string name="independent_chat_actions">Chat actions</string>
+    <string name="independent_chat_empty_title">Your conversations</string>
+    <string name="independent_chat_recent">Recent chats</string>
+    <string name="back">Back</string>
     <string name="remove_from_history">Remove from history</string>
     <string name="remove_from_playlist">Remove from playlist</string>
     <string name="remove_from_queue">Remove from queue</string>
