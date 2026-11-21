@@ -243,3 +243,23 @@ internal fun SongMenuDownloadItems(
         )
     }
 }
+
+@Composable
+internal fun SongMenuSendToChatItem(
+    index: Int,
+    count: Int,
+    onClick: () -> Unit,
+) {
+    NewMenuItem(
+        headlineContent = { Text(text = stringResource(R.string.independent_chat_send_song)) },
+        leadingContent = {
+            Icon(
+                painter = painterResource(R.drawable.music_note),
+                contentDescription = null,
+            )
+        },
+        onClick = onClick,
+        index = index,
+        count = count,
+    )
+}

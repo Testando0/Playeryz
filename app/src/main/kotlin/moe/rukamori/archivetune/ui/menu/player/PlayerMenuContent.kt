@@ -50,7 +50,6 @@ internal fun PlayerMenuContent(
     onRemoveFromQueue: (() -> Unit)?,
     onSpeedDialSongIdsChange: (String) -> Unit,
     onShowChoosePlaylistDialog: () -> Unit,
-    onShowSendToChatDialog: () -> Unit,
     onShowSelectArtistDialog: () -> Unit,
     onShowDetailsDialog: () -> Unit,
     onShowEqualizerDialog: () -> Unit,
@@ -108,21 +107,21 @@ internal fun PlayerMenuContent(
             }
         }
 
-        item {
-            PlayerMenuDownloadSection(
-                download = download,
-                mediaMetadata = mediaMetadata,
-                isLocalMedia = isLocalMedia,
-                externalDownloaderEnabled = externalDownloaderEnabled,
-                externalDownloaderPackage = externalDownloaderPackage,
-                database = database,
-                context = context,
-                onShowSendToChatDialog = onShowSendToChatDialog,
-                onDismiss = onDismiss,
-            )
-        }
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
+        if (!isLocalMedia) {
+            item {
+                PlayerMenuDownloadSection(
+                    download = download,
+                    mediaMetadata = mediaMetadata,
+                    externalDownloaderEnabled = externalDownloaderEnabled,
+                    externalDownloaderPackage = externalDownloaderPackage,
+                    database = database,
+                    context = context,
+                    onDismiss = onDismiss,
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
 
         item {

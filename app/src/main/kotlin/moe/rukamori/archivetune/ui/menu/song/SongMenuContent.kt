@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.offline.Download
@@ -28,6 +32,7 @@ import moe.rukamori.archivetune.db.entities.Song
 import moe.rukamori.archivetune.playback.PlayerConnection
 import moe.rukamori.archivetune.ui.component.BottomSheetPageState
 import moe.rukamori.archivetune.ui.component.MenuSurfaceSection
+import moe.rukamori.archivetune.ui.menu.player.ChatShareDialog
 import moe.rukamori.archivetune.utils.SpeedDialPin
 import moe.rukamori.archivetune.ui.screens.playlist.CachePlaylistViewModel
 
@@ -62,7 +67,19 @@ internal fun SongMenuContent(
     onRotateRefetch: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val showMutationSection = event != null || playlistSong != null || isFromCache || !isLocalSong
+    var showSendToChatDialog by rememberSaveable { mutableStateOf(false) }
+    val showMutationSection = true
+
+    if (showSendToChatDialog) {
+        ChatShareDialog(
+            title = song.song.title,
+            artist = song.artists.mapNotNull { it.name.takeIf(String::isNotBlank) }.joinToString(", "),
+            album = song.album?.title ?: song.song.albumName,
+            trackId = song.id,
+            coverUrl = song.song.thumbnailUrl,
+            onDismiss = { showSendToChatDialog = false },
+        )
+    }
 
     LazyColumn(
         contentPadding =
@@ -118,14 +135,15 @@ internal fun SongMenuContent(
                         (if (isFromCache) 1 else 0) +
                         (if (!isLocalSong) {
                             1 + (if (playbackSource == PlaybackSource.FLAC) 1 else 0) + (if (externalDownloaderEnabled) 1 else 0)
-                        } else 0)
+                        } else 0) + 1
 
                 val eventIndex = 0
                 val playlistSongIndex = if (event != null) 1 else 0
                 val cacheIndex = (if (event != null) 1 else 0) + (if (playlistSong != null) 1 else 0)
                 val downloadIndex = cacheIndex + (if (isFromCache) 1 else 0)
                 val flacIndex = downloadIndex + 1
-                val externalDownloaderIndex = flacIndex + (if (playbackSource == PlaybackSource.FLAC) 1 else 0)
+                val sendToChatIndex = cacheIndex + (if (!isLocalSong) 1 + (if (playbackSource == PlaybackSource.FLAC) 1 else 0) else 0)
+                val externalDownloaderIndex = sendToChatIndex + 1
 
                 MenuSurfaceSection {
                     if (event != null) {
@@ -176,6 +194,11 @@ internal fun SongMenuContent(
                             onDismiss = onDismiss,
                         )
                     }
+                    SongMenuSendToChatItem(
+                        index = sendToChatIndex,
+                        count = mutationItemCount,
+                        onClick = { showSendToChatDialog = true },
+                    )
                 }
             }
         }

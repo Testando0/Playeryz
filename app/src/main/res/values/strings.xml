@@ -320,6 +320,7 @@
     <string name="independent_chat_share_music">Share current song</string>
     <string name="independent_chat_play_track">Tap to play in YumaPlayer</string>
     <string name="independent_chat_send_song">Enviar no chat</string>
+    <string name="independent_chat_send_song_subtitle">Escolher até 5 conversas</string>
     <string name="independent_chat_send_song_title">Enviar música no chat</string>
     <string name="independent_chat_send_song_description">Escolha até 5 conversas para enviar “%1$s”.</string>
     <string name="independent_chat_login_to_send_song">Entre na sua conta do chat para enviar músicas.</string>

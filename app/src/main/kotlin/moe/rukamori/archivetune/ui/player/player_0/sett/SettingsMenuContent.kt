@@ -7,7 +7,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import moe.rukamori.archivetune.R
 import moe.rukamori.archivetune.constants.SpeedDialSongIdsKey
 import moe.rukamori.archivetune.ui.menu.rememberCastPlayerMenuAction
+import moe.rukamori.archivetune.ui.menu.player.ChatShareDialog
 import moe.rukamori.archivetune.ui.player.player_0.buttons.PlayerAction
 import moe.rukamori.archivetune.ui.settings.SettingsDimensions
 import moe.rukamori.archivetune.ui.state.PlayerUiState
@@ -55,10 +59,22 @@ fun SettingsMenuContent(
 
     val (speedDialSongIds, onSpeedDialSongIdsChange) = rememberPreference(SpeedDialSongIdsKey, "")
     val speedDialPins = remember(speedDialSongIds) { parseSpeedDialPins(speedDialSongIds) }
+    var showSendToChatDialog by rememberSaveable { mutableStateOf(false) }
     val songId = state.trackUrl
     val songPin = remember(songId) { SpeedDialPin(type = SpeedDialPinType.SONG, id = songId) }
     val isPinned = remember(speedDialPins, songPin) {
         speedDialPins.any { it.type == songPin.type && it.id == songPin.id }
+    }
+
+    if (showSendToChatDialog) {
+        ChatShareDialog(
+            title = state.title,
+            artist = state.artist,
+            album = state.album,
+            trackId = state.trackUrl,
+            coverUrl = state.coverUrl,
+            onDismiss = { showSendToChatDialog = false },
+        )
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -131,7 +147,7 @@ fun SettingsMenuContent(
         val castAction = rememberCastPlayerMenuAction()
         val hasCast = castAction != null
 
-        val totalRowCount = 8 +
+        val totalRowCount = 9 +
             (if (hasCast) 1 else 0) +
             (if (hasArtistId) 1 else 0) +
             (if (hasAlbumId) 1 else 0)
@@ -193,6 +209,18 @@ fun SettingsMenuContent(
             subtitle = stringResource(R.string.save_track_offline),
             iconResId = R.drawable.download,
             onClick = onNavigateToDownload,
+            showArrow = true,
+            index = currentRow++,
+            count = totalRowCount,
+        )
+
+        Spacer(modifier = Modifier.height(SettingsDimensions.SegmentedItemGap))
+
+        CompactMenuRow(
+            title = stringResource(R.string.independent_chat_send_song),
+            subtitle = stringResource(R.string.independent_chat_send_song_subtitle),
+            iconResId = R.drawable.music_note,
+            onClick = { showSendToChatDialog = true },
             showArrow = true,
             index = currentRow++,
             count = totalRowCount,

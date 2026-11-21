@@ -43,16 +43,14 @@ import moe.rukamori.archivetune.ui.component.MenuSurfaceSection
 internal fun PlayerMenuDownloadSection(
     download: Download?,
     mediaMetadata: MediaMetadata,
-    isLocalMedia: Boolean,
     externalDownloaderEnabled: Boolean,
     externalDownloaderPackage: String,
     database: MusicDatabase,
     context: Context,
-    onShowSendToChatDialog: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     MenuSurfaceSection(modifier = Modifier.padding(vertical = 6.dp)) {
-        if (!isLocalMedia) when (download?.state) {
+        when (download?.state) {
             Download.STATE_COMPLETED -> {
                 ListItem(
                     headlineContent = {
@@ -133,22 +131,7 @@ internal fun PlayerMenuDownloadSection(
                 )
             }
         }
-        HorizontalDivider(
-            modifier = Modifier.padding(start = 56.dp),
-            color = MaterialTheme.colorScheme.outlineVariant,
-        )
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.independent_chat_send_song)) },
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.music_note),
-                    contentDescription = null,
-                )
-            },
-            modifier = Modifier.clickable(onClick = onShowSendToChatDialog),
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        )
-        if (!isLocalMedia && externalDownloaderEnabled) {
+        if (externalDownloaderEnabled) {
             HorizontalDivider(
                 modifier = Modifier.padding(start = 56.dp),
                 color = MaterialTheme.colorScheme.outlineVariant,
