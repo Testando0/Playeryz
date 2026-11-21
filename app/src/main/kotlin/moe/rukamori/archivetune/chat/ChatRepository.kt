@@ -50,6 +50,8 @@ internal class ChatRepository @Inject constructor(
     suspend fun login(username: String, password: String): ChatUser =
         authenticate("/v1/auth/login", username, username, password)
 
+    suspend fun me(): ChatUser = request("/v1/me").getJSONObject("user").let(::parseUser)
+
     suspend fun conversations(): List<ChatConversation> = request("/v1/conversations").let { root ->
         val items = root.getJSONArray("conversations")
         buildList { for (index in 0 until items.length()) add(parseConversation(items.getJSONObject(index))) }
@@ -63,6 +65,19 @@ internal class ChatRepository @Inject constructor(
     suspend fun sendMessage(conversationId: String, body: String): ChatMessage =
         request("/v1/conversations/$conversationId/messages", "POST", JSONObject().put("body", body))
             .getJSONObject("message").let(::parseMessage)
+
+    suspend fun createConversation(kind: String, title: String?, memberUsernames: List<String>): ChatConversation {
+        val members = JSONArray().apply { memberUsernames.forEach { put(it) } }
+        return request(
+            "/v1/conversations",
+            "POST",
+            JSONObject().put("kind", kind).put("title", title).put("memberUsernames", members),
+        ).getJSONObject("conversation").let(::parseConversation)
+    }
+
+    suspend fun addMember(conversationId: String, username: String): ChatConversation =
+        request("/v1/conversations/$conversationId/members", "POST", JSONObject().put("username", username))
+            .getJSONObject("conversation").let(::parseConversation)
 
     fun connect(onMessage: (ChatMessage) -> Unit) {
         val token = currentToken() ?: return
