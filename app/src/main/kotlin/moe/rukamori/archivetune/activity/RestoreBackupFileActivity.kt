@@ -208,21 +208,24 @@ private fun RestoreOptionsDialog(
             val isChecked = category in selected
             val isAvailable = category in availableCategories
             val labelRes =
-                when (category) {
-                    BackupCategory.LIBRARY -> R.string.backup_category_library
-                    BackupCategory.ACCOUNT -> R.string.backup_category_account
+                    when (category) {
+                        BackupCategory.LIBRARY -> R.string.backup_category_library
+                        BackupCategory.DOWNLOADS -> R.string.backup_category_downloads
+                        BackupCategory.ACCOUNT -> R.string.backup_category_account
                     BackupCategory.SETTINGS -> R.string.backup_category_settings
                 }
             val descRes =
-                when (category) {
-                    BackupCategory.LIBRARY -> R.string.backup_category_library_desc
-                    BackupCategory.ACCOUNT -> R.string.backup_category_account_desc
+                    when (category) {
+                        BackupCategory.LIBRARY -> R.string.backup_category_library_desc
+                        BackupCategory.DOWNLOADS -> R.string.backup_category_downloads_desc
+                        BackupCategory.ACCOUNT -> R.string.backup_category_account_desc
                     BackupCategory.SETTINGS -> R.string.backup_category_settings_desc
                 }
             val iconRes =
-                when (category) {
-                    BackupCategory.LIBRARY -> R.drawable.library_music
-                    BackupCategory.ACCOUNT -> R.drawable.account
+                    when (category) {
+                        BackupCategory.LIBRARY -> R.drawable.library_music
+                        BackupCategory.DOWNLOADS -> R.drawable.offline
+                        BackupCategory.ACCOUNT -> R.drawable.account
                     BackupCategory.SETTINGS -> R.drawable.ic_settings
                 }
             Surface(

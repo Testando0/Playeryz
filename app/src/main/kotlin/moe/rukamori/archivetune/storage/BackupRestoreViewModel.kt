@@ -51,6 +51,7 @@ import java.io.InputStreamReader
 import java.io.PushbackReader
 import java.io.Reader
 import java.io.StringReader
+import java.io.File
 import java.util.zip.ZipEntry
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -65,6 +66,7 @@ data class BackupRestoreProgressUi(
 
 enum class BackupCategory {
     LIBRARY,
+    DOWNLOADS,
     ACCOUNT,
     SETTINGS,
 }
@@ -196,8 +198,24 @@ class BackupRestoreViewModel
                     val includeSettings = BackupCategory.SETTINGS in categories
                     val includeAccount = BackupCategory.ACCOUNT in categories
                     val includeLibrary = BackupCategory.LIBRARY in categories
+                    val includeDownloads = BackupCategory.DOWNLOADS in categories
                     val settingsExcludedKeys = if (includeAccount) emptySet() else ACCOUNT_PREF_KEYS
                     val dbFile = context.getDatabasePath(InternalDatabase.DB_NAME)
+                    val downloadDirectory = StorageLocationRepository.cacheDirectory(context, StorageFolderKind.DOWNLOADS)
+                    val downloadFiles = if (includeDownloads) collectFiles(downloadDirectory) else emptyList()
+                    val downloadDatabaseFiles = if (includeDownloads) {
+                        context.databaseList()
+                            .filter { it.contains("exoplayer", ignoreCase = true) }
+                            .flatMap { databaseName ->
+                                listOf(
+                                    context.getDatabasePath(databaseName),
+                                    context.getDatabasePath("$databaseName-wal"),
+                                    context.getDatabasePath("$databaseName-shm"),
+                                    context.getDatabasePath("$databaseName-journal"),
+                                )
+                            }
+                            .filter { it.isFile }
+                    } else emptyList()
                     val dbFiles =
                         if (includeLibrary) {
                             listOf(
@@ -210,7 +228,7 @@ class BackupRestoreViewModel
                             emptyList()
                         }
 
-                    val totalUnits = (if (includeSettings) 1 else 0) + (if (includeLibrary) 1 else 0) + dbFiles.size
+                    val totalUnits = (if (includeSettings) 1 else 0) + (if (includeLibrary) 1 else 0) + dbFiles.size + downloadFiles.size.coerceAtLeast(if (includeDownloads) 1 else 0) + downloadDatabaseFiles.size
                     val unitSpan = 100f / totalUnits.coerceAtLeast(1)
                     var completedUnits = 0
                     var lastPercent = -1
@@ -280,6 +298,49 @@ class BackupRestoreViewModel
                                     completedUnits++
                                 }
                             }
+
+                            if (includeDownloads) {
+                                emit(context.getString(R.string.backup_step_copying_downloads), indeterminate = false)
+                                if (downloadFiles.isEmpty()) {
+                                    completedUnits++
+                                } else {
+                                    val buffer = ByteArray(BUFFER_SIZE)
+                                    downloadFiles.forEach { file ->
+                                        val relative = file.relativeTo(downloadDirectory).invariantSeparatorsPath
+                                        val fileSize = file.length().coerceAtLeast(1L)
+                                        var bytesCopied = 0L
+                                        zipStream.putNextEntry(ZipEntry("$DOWNLOADS_PREFIX$relative"))
+                                        FileInputStream(file).use { input ->
+                                            while (true) {
+                                                val read = input.read(buffer)
+                                                if (read <= 0) break
+                                                zipStream.write(buffer, 0, read)
+                                                bytesCopied += read
+                                                emit(context.getString(R.string.backup_step_copying_downloads), bytesCopied.toFloat() / fileSize.toFloat(), false)
+                                            }
+                                        }
+                                        zipStream.closeEntry()
+                                        completedUnits++
+                                    }
+                                }
+                                downloadDatabaseFiles.forEach { file ->
+                                    val fileSize = file.length().coerceAtLeast(1L)
+                                    var bytesCopied = 0L
+                                    zipStream.putNextEntry(ZipEntry("$DOWNLOAD_DATABASE_PREFIX${file.name}"))
+                                    FileInputStream(file).use { input ->
+                                        val buffer = ByteArray(BUFFER_SIZE)
+                                        while (true) {
+                                            val read = input.read(buffer)
+                                            if (read <= 0) break
+                                            zipStream.write(buffer, 0, read)
+                                            bytesCopied += read
+                                            emit(context.getString(R.string.backup_step_copying_downloads), bytesCopied.toFloat() / fileSize.toFloat(), false)
+                                        }
+                                    }
+                                    zipStream.closeEntry()
+                                    completedUnits++
+                                }
+                            }
                         }
                     } ?: throw IllegalStateException("Failed to open output stream")
 
@@ -312,6 +373,7 @@ class BackupRestoreViewModel
                     val includeSettings = BackupCategory.SETTINGS in categories
                     val includeAccount = BackupCategory.ACCOUNT in categories
                     val includeLibrary = BackupCategory.LIBRARY in categories
+                    val includeDownloads = BackupCategory.DOWNLOADS in categories
                     val settingsExcludedKeys = if (includeAccount) emptySet() else ACCOUNT_PREF_KEYS
                     emitProgress(
                         title = title,
@@ -333,18 +395,21 @@ class BackupRestoreViewModel
                         }
                     }
                     if (includeLibrary && !hasDb) throw IllegalStateException("Backup missing database")
+                    if (includeDownloads && entryNames.none { it.startsWith(DOWNLOADS_PREFIX) || it.startsWith(DOWNLOAD_DATABASE_PREFIX) }) {
+                        throw IllegalStateException("Backup missing downloaded files")
+                    }
 
                     val restoreEntries =
                         entryNames.filter { name ->
                             (includeSettings && (name == SETTINGS_XML_FILENAME || name == SETTINGS_FILENAME)) ||
                                 (
-                                    includeLibrary && (
+                                        includeLibrary && (
                                         name == InternalDatabase.DB_NAME ||
                                             name == "${InternalDatabase.DB_NAME}-wal" ||
                                             name == "${InternalDatabase.DB_NAME}-shm" ||
                                             name == "${InternalDatabase.DB_NAME}-journal"
                                     )
-                                )
+                                ) || (includeDownloads && (name.startsWith(DOWNLOADS_PREFIX) || name.startsWith(DOWNLOAD_DATABASE_PREFIX)))
                         }
 
                     val totalUnits = 1 + (if (includeLibrary) 1 else 0) + restoreEntries.size
@@ -360,7 +425,7 @@ class BackupRestoreViewModel
                     }
 
                     completedUnits++
-                    if (includeLibrary) {
+                    if (includeLibrary || includeDownloads) {
                         emit(context.getString(R.string.restore_step_stopping_playback), indeterminate = true)
                         runCatching { context.stopService(Intent(context, MusicService::class.java)) }
                         runCatching { database.awaitIdle() }
@@ -406,6 +471,28 @@ class BackupRestoreViewModel
                                         FileOutputStream(dbFile).use { out ->
                                             zip.copyTo(out)
                                         }
+                                    }
+
+                                    else -> if (name.startsWith(DOWNLOAD_DATABASE_PREFIX)) {
+                                        emit(context.getString(R.string.restore_step_restoring_downloads), indeterminate = false)
+                                        val databaseName = name.removePrefix(DOWNLOAD_DATABASE_PREFIX)
+                                        if (databaseName.isBlank() || databaseName.contains("..")) {
+                                            throw IllegalStateException("Invalid download database path")
+                                        }
+                                        FileOutputStream(context.getDatabasePath(databaseName)).use { out -> zip.copyTo(out) }
+                                    } else if (name.startsWith(DOWNLOADS_PREFIX)) {
+                                        emit(context.getString(R.string.restore_step_restoring_downloads), indeterminate = false)
+                                        val relative = name.removePrefix(DOWNLOADS_PREFIX)
+                                        if (relative.isBlank() || relative.contains("..")) {
+                                            throw IllegalStateException("Invalid downloaded file path")
+                                        }
+                                        val target = StorageLocationRepository.cacheDirectory(context, StorageFolderKind.DOWNLOADS).resolve(relative).canonicalFile
+                                        val root = StorageLocationRepository.cacheDirectory(context, StorageFolderKind.DOWNLOADS).canonicalFile
+                                        if (!target.path.startsWith(root.path + File.separator)) {
+                                            throw IllegalStateException("Invalid downloaded file path")
+                                        }
+                                        target.parentFile?.mkdirs()
+                                        FileOutputStream(target).use { out -> zip.copyTo(out) }
                                     }
                                 }
                                 completedUnits++
@@ -779,6 +866,9 @@ class BackupRestoreViewModel
                         if (hasDb) {
                             categories.add(BackupCategory.LIBRARY)
                         }
+                        if (entryNames.any { it.startsWith(DOWNLOADS_PREFIX) }) {
+                            categories.add(BackupCategory.DOWNLOADS)
+                        }
                         if (categories.isEmpty()) {
                             return@withContext BackupValidationResult(
                                 isValid = false,
@@ -805,6 +895,8 @@ class BackupRestoreViewModel
         companion object {
             const val SETTINGS_FILENAME = "settings.preferences_pb"
             const val SETTINGS_XML_FILENAME = "settings.xml"
+            const val DOWNLOADS_PREFIX = "downloads/"
+            const val DOWNLOAD_DATABASE_PREFIX = "download-database/"
             private const val BUFFER_SIZE = 64 * 1024
 
             val ACCOUNT_PREF_KEYS: Set<String> =
@@ -841,4 +933,7 @@ class BackupRestoreViewModel
                     "spotify_account_avatar_url",
                 )
         }
+
+        private fun collectFiles(root: File): List<File> =
+            if (!root.exists()) emptyList() else root.walkTopDown().filter { it.isFile }.toList()
     }
