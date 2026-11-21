@@ -72,44 +72,9 @@ fun PlayerToolbar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(44.dp)
     ) {
         if (!state.isImmersiveEnabled) {
-            val subtitle = state.queueTitle?.takeIf { it.isNotBlank() } ?: state.album?.takeIf { it.isNotBlank() }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center)
-                    .padding(horizontal = 48.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.now_playing),
-                    color = Color.White,
-                    fontSize = if (subtitle != null) 12.sp else 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = LocalArchiveTuneFontFamily.current,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.graphicsLayer { alpha = 0.6f }
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = LocalArchiveTuneFontFamily.current,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.graphicsLayer { alpha = 0.9f }
-                    )
-                }
-            }
-
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
