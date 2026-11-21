@@ -35,11 +35,12 @@ internal data class ChatUiState(
 internal class ChatViewModel @Inject constructor(
     private val repository: ChatRepository,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(ChatUiState(loggedIn = repository.currentToken() != null))
+    private val hasSavedSession = repository.currentToken() != null
+    private val _state = MutableStateFlow(ChatUiState(loggedIn = hasSavedSession, loading = hasSavedSession))
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     init {
-        if (repository.currentToken() != null) loadCurrentUser()
+        if (hasSavedSession) loadCurrentUser()
         repository.connect(::onRealtimeMessage)
     }
 
@@ -71,7 +72,7 @@ internal class ChatViewModel @Inject constructor(
                 if (snapshot.registerMode) repository.register(snapshot.username, snapshot.displayName.ifBlank { snapshot.username }, snapshot.password)
                 else repository.login(snapshot.username, snapshot.password)
             }.onSuccess { user ->
-                _state.value = ChatUiState(loggedIn = true, username = user.username, displayName = user.displayName, userId = user.id)
+                _state.value = ChatUiState(loggedIn = true, username = user.username, displayName = user.displayName, userId = user.id, loading = true)
                 repository.connect(::onRealtimeMessage)
                 refresh()
             }.onFailure { error ->
@@ -87,7 +88,7 @@ internal class ChatViewModel @Inject constructor(
             runCatching { repository.me() }.onSuccess { user ->
                 _state.value = _state.value.copy(loggedIn = true, username = user.username, displayName = user.displayName, userId = user.id)
                 refresh()
-            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Could not load your chat profile") }
+            }.onFailure { _state.value = _state.value.copy(loading = false, error = it.message ?: "Could not load your chat profile") }
         }
     }
 
