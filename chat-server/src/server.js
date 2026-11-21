@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -10,6 +10,16 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pg from 'pg';
 import { WebSocketServer, WebSocket } from 'ws';
+import {
+  createAssetUploadUrl,
+  neonHelloFunctionUrl,
+  neonRealtimeConfig,
+  neonServiceStatus,
+  verifyNeonAuthToken,
+} from './neon-services.js';
+
+dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 const { Pool } = pg;
 const PORT = Number(process.env.PORT || 10000);
@@ -104,8 +114,23 @@ async function broadcastConversation(conversationId, payload) {
 }
 
 app.get('/health', async (_req, res) => {
-  try { await pool.query('SELECT 1'); res.json({ ok: true, service: 'yumaplayer-chat' }); }
+  try { await pool.query('SELECT 1'); res.json({ ok: true, service: 'yumaplayer-chat', neon: neonServiceStatus() }); }
   catch { res.status(503).json({ ok: false }); }
+});
+
+app.get('/v1/services', (_req, res) => {
+  res.json({
+    services: neonServiceStatus(),
+    functionUrls: { hello: neonHelloFunctionUrl() },
+    realtime: neonRealtimeConfig(),
+  });
+});
+
+app.get('/v1/auth/neon/verify', async (req, res) => {
+  const header = req.headers.authorization || '';
+  const claims = header.startsWith('Bearer ') ? await verifyNeonAuthToken(header.slice(7)) : null;
+  if (!claims) return res.status(401).json({ error: 'invalid_neon_auth_token' });
+  res.json({ subject: claims.sub, email: claims.email || null, issuer: claims.iss || null });
 });
 
 app.post('/v1/auth/register', async (req, res) => {
@@ -212,6 +237,16 @@ app.post('/v1/conversations/:conversationId/messages', requireAuth, async (req, 
   const message = messageJson(await messageRow(rows[0].id));
   await broadcastConversation(conversationId, { type: 'message', message });
   res.status(201).json({ message });
+});
+
+app.post('/v1/assets/upload-url', requireAuth, async (req, res) => {
+  try {
+    const result = await createAssetUploadUrl({ userId: req.userId, contentType: req.body?.contentType });
+    res.status(201).json(result);
+  } catch (error) {
+    if (error.message === 'neon_object_storage_not_configured') return res.status(503).json({ error: error.message });
+    console.error(error); res.status(500).json({ error: 'storage_error' });
+  }
 });
 
 const server = http.createServer(app);
