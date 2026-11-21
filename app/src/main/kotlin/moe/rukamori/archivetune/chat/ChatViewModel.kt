@@ -27,6 +27,7 @@ internal data class ChatUiState(
     val showAddMemberDialog: Boolean = false,
     val addMemberUsername: String = "",
     val showActionsMenu: Boolean = false,
+    val unreadByConversation: Map<String, Int> = emptyMap(),
     val loading: Boolean = false,
     val error: String? = null,
 )
@@ -104,7 +105,7 @@ internal class ChatViewModel @Inject constructor(
     }
 
     fun selectConversation(conversation: ChatConversation) {
-        _state.value = _state.value.copy(selected = conversation, loading = true, error = null)
+        _state.value = _state.value.copy(selected = conversation, loading = true, error = null, unreadByConversation = _state.value.unreadByConversation - conversation.id)
         viewModelScope.launch {
             runCatching { repository.messages(conversation.id) }.onSuccess { messages ->
                 _state.value = _state.value.copy(messages = messages, loading = false)
@@ -163,13 +164,36 @@ internal class ChatViewModel @Inject constructor(
         _state.value = snapshot.copy(draft = "")
         viewModelScope.launch {
             runCatching { repository.sendMessage(conversation.id, body) }.onSuccess { message ->
+                updateConversationPreview(message)
                 if (_state.value.messages.none { it.id == message.id }) _state.value = _state.value.copy(messages = _state.value.messages + message)
             }.onFailure { _state.value = _state.value.copy(draft = body, error = it.message ?: "Não foi possível enviar") }
         }
     }
 
+    fun sendCurrentTrack(title: String, artist: String, album: String?, trackId: String, coverUrl: String?) {
+        val conversation = _state.value.selected ?: return
+        if (trackId.isBlank() || title.isBlank()) return
+        viewModelScope.launch {
+            runCatching { repository.sendMessage(conversation.id, "", ChatTrack(trackId, title, artist, album, coverUrl)) }.onSuccess { message ->
+                updateConversationPreview(message)
+                if (_state.value.messages.none { it.id == message.id }) _state.value = _state.value.copy(messages = _state.value.messages + message)
+            }.onFailure { _state.value = _state.value.copy(error = it.message ?: "Could not share this song") }
+        }
+    }
+
+    private fun updateConversationPreview(message: ChatMessage) {
+        val preview = message.track?.title ?: message.body
+        _state.value = _state.value.copy(conversations = _state.value.conversations.map { conversation ->
+            if (conversation.id == message.conversationId) conversation.copy(lastMessagePreview = preview) else conversation
+        })
+    }
+
     private fun onRealtimeMessage(message: ChatMessage) {
         val current = _state.value
-        if (current.messages.none { it.id == message.id }) _state.value = current.copy(messages = current.messages + message)
+        val isOpen = current.selected?.id == message.conversationId
+        val nextUnread = if (isOpen) current.unreadByConversation else current.unreadByConversation + (message.conversationId to ((current.unreadByConversation[message.conversationId] ?: 0) + 1))
+        updateConversationPreview(message)
+        if (isOpen && current.messages.none { it.id == message.id }) _state.value = _state.value.copy(messages = _state.value.messages + message, unreadByConversation = nextUnread)
+        else _state.value = _state.value.copy(unreadByConversation = nextUnread)
     }
 }

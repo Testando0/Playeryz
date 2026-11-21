@@ -56,10 +56,15 @@ import moe.rukamori.archivetune.R
 import moe.rukamori.archivetune.chat.ChatConversation
 import moe.rukamori.archivetune.chat.ChatUiState
 import moe.rukamori.archivetune.chat.ChatViewModel
+import moe.rukamori.archivetune.models.ParsedIntentAction
+import moe.rukamori.archivetune.ui.PlayerViewModel
+import moe.rukamori.archivetune.ui.state.PlayerUiState
 
 @Composable
 internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel = hiltViewModel()) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    val playerViewModel: PlayerViewModel = hiltViewModel()
+    val playerState = playerViewModel.uiState.collectAsStateWithLifecycle().value
     val clipboard = LocalClipboardManager.current
     Scaffold(
         topBar = {
@@ -95,7 +100,7 @@ internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel =
         },
     ) { padding ->
         if (!state.loggedIn) LoginContent(state, viewModel, Modifier.padding(padding))
-        else ChatContent(state, viewModel, Modifier.padding(padding))
+        else ChatContent(state, viewModel, playerViewModel, playerState, Modifier.padding(padding))
     }
 }
 
@@ -122,9 +127,9 @@ private fun LoginContent(state: ChatUiState, viewModel: ChatViewModel, modifier:
 }
 
 @Composable
-private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
+private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, playerState: PlayerUiState, modifier: Modifier) {
     if (state.selected == null) ConversationList(state, viewModel, modifier)
-    else ConversationDetail(state, viewModel, modifier)
+    else ConversationDetail(state, viewModel, playerViewModel, playerState, modifier)
     if (state.showCreateDialog) CreateConversationDialog(state, viewModel)
     if (state.showAddMemberDialog) AddMemberDialog(state, viewModel)
 }
@@ -141,7 +146,7 @@ private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modif
         } else {
             Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
             LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(state.conversations, key = { it.id }) { conversation -> ConversationRow(conversation, state.username) { viewModel.selectConversation(conversation) } }
+                items(state.conversations, key = { it.id }) { conversation -> ConversationRow(conversation, state.username, state.unreadByConversation[conversation.id] ?: 0) { viewModel.selectConversation(conversation) } }
             }
         }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
@@ -149,7 +154,7 @@ private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modif
 }
 
 @Composable
-private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
+private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, playerState: PlayerUiState, modifier: Modifier) {
     val conversation = state.selected ?: return
     Column(modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -163,14 +168,33 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, mod
         HorizontalDivider()
         LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp), reverseLayout = false) {
             items(state.messages, key = { it.id }) { message ->
-                Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp)) {
-                    Text(message.senderName, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) { Text(message.body, modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp)) }
-                    message.trackTitle?.let { Text("♫ $it", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp, top = 2.dp)) }
+                val mine = message.senderUsername == state.username
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start) {
+                    Column(horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
+                        Text(if (mine) stringResource(R.string.independent_chat_you) else message.senderName, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Surface(shape = RoundedCornerShape(18.dp), color = if (mine) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh) {
+                            Column(Modifier.padding(horizontal = 15.dp, vertical = 10.dp)) {
+                                if (message.body.isNotBlank()) Text(message.body)
+                                message.track?.let { track ->
+                                    Row(Modifier.clickable { playerViewModel.handleDeepLinkAction(ParsedIntentAction.YouTubeVideo(track.id, null)) }, verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(painterResource(R.drawable.music_note), contentDescription = null, modifier = Modifier.size(22.dp))
+                                        Column(Modifier.padding(start = 8.dp)) {
+                                            Text(track.title, fontWeight = FontWeight.SemiBold)
+                                            track.artist?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                                            Text(stringResource(R.string.independent_chat_play_track), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { viewModel.sendCurrentTrack(playerState.title, playerState.artist, playerState.album, playerState.trackUrl, playerState.coverUrl) }, enabled = playerState.trackUrl.isNotBlank()) {
+                Icon(painterResource(R.drawable.music_note), contentDescription = stringResource(R.string.independent_chat_share_music))
+            }
             OutlinedTextField(value = state.draft, onValueChange = viewModel::updateDraft, placeholder = { Text(stringResource(R.string.independent_chat_message_hint)) }, singleLine = true, shape = RoundedCornerShape(24.dp), modifier = Modifier.weight(1f))
             TextButton(onClick = viewModel::send, enabled = state.draft.isNotBlank(), modifier = Modifier.padding(start = 4.dp)) { Text(stringResource(R.string.independent_chat_send)) }
         }
@@ -213,15 +237,15 @@ private fun AddMemberDialog(state: ChatUiState, viewModel: ChatViewModel) {
 }
 
 @Composable
-private fun ConversationRow(conversation: ChatConversation, selfUsername: String, onClick: () -> Unit) {
+private fun ConversationRow(conversation: ChatConversation, selfUsername: String, unreadCount: Int, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(20.dp)) {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Avatar(conversationTitle(conversation, selfUsername), Modifier.size(50.dp))
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
                 Text(conversationTitle(conversation, selfUsername), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(if (conversation.kind == "group") stringResource(R.string.independent_chat_group) else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall)
+                Text(conversation.lastMessagePreview ?: if (conversation.kind == "group") stringResource(R.string.independent_chat_group) else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall, maxLines = 1)
             }
-            Text("›", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (unreadCount > 0) Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp)) { Box(contentAlignment = Alignment.Center) { Text(unreadCount.coerceAtMost(99).toString(), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelSmall) } }
         }
     }
 }

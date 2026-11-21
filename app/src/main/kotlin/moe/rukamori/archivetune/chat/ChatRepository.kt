@@ -23,13 +23,23 @@ internal data class ChatConversation(
     val kind: String,
     val title: String?,
     val members: List<ChatMember>,
+    val lastMessagePreview: String? = null,
+)
+internal data class ChatTrack(
+    val id: String,
+    val title: String,
+    val artist: String? = null,
+    val album: String? = null,
+    val coverUrl: String? = null,
 )
 internal data class ChatMessage(
     val id: String,
+    val conversationId: String,
+    val senderUsername: String,
     val senderName: String,
     val body: String,
     val createdAt: String,
-    val trackTitle: String? = null,
+    val track: ChatTrack? = null,
 )
 
 @Singleton
@@ -62,8 +72,10 @@ internal class ChatRepository @Inject constructor(
         buildList { for (index in 0 until items.length()) add(parseMessage(items.getJSONObject(index))) }
     }
 
-    suspend fun sendMessage(conversationId: String, body: String): ChatMessage =
-        request("/v1/conversations/$conversationId/messages", "POST", JSONObject().put("body", body))
+    suspend fun sendMessage(conversationId: String, body: String, track: ChatTrack? = null): ChatMessage =
+        request("/v1/conversations/$conversationId/messages", "POST", JSONObject().put("body", body).apply {
+            track?.let { put("track", JSONObject().put("id", it.id).put("title", it.title).put("artist", it.artist).put("album", it.album).put("coverUrl", it.coverUrl)) }
+        })
             .getJSONObject("message").let(::parseMessage)
 
     suspend fun createConversation(kind: String, title: String?, memberUsernames: List<String>): ChatConversation {
@@ -124,12 +136,16 @@ internal class ChatRepository @Inject constructor(
                 add(ChatMember(item.optString("username"), item.optString("displayName")))
             }
         }
-        return ChatConversation(json.getString("id"), json.optString("kind", "private"), json.optString("title").ifBlank { null }, members)
+        val last = json.optJSONObject("lastMessage")
+        val trackTitle = last?.optJSONObject("track")?.optString("title")?.ifBlank { null }
+        val preview = trackTitle ?: last?.optString("body")?.ifBlank { null }
+        return ChatConversation(json.getString("id"), json.optString("kind", "private"), json.optString("title").ifBlank { null }, members, preview)
     }
     private fun parseMessage(json: JSONObject): ChatMessage {
         val sender = json.optJSONObject("sender")
         val track = json.optJSONObject("track")
-        return ChatMessage(json.getString("id"), sender?.optString("displayName").orEmpty().ifBlank { sender?.optString("username").orEmpty() }, json.optString("body"), json.optString("createdAt"), track?.optString("title")?.ifBlank { null })
+        val parsedTrack = track?.let { ChatTrack(it.optString("id"), it.optString("title"), it.optString("artist").ifBlank { null }, it.optString("album").ifBlank { null }, it.optString("coverUrl").ifBlank { null }) }
+        return ChatMessage(json.getString("id"), json.optString("conversationId"), sender?.optString("username").orEmpty(), sender?.optString("displayName").orEmpty().ifBlank { sender?.optString("username").orEmpty() }, json.optString("body"), json.optString("createdAt"), parsedTrack)
     }
 
     companion object {

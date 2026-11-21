@@ -75,6 +75,9 @@ async function isMember(userId, conversationId) {
 async function conversationForUser(userId, conversationId) {
   const { rows } = await pool.query(
     `SELECT c.id, c.kind, c.title, c.created_by, c.created_at,
+            (SELECT json_build_object('body', lm.body, 'track', lm.track, 'senderUsername', lu.username)
+               FROM messages lm JOIN users lu ON lu.id = lm.sender_id
+              WHERE lm.conversation_id = c.id ORDER BY lm.created_at DESC, lm.id DESC LIMIT 1) AS last_message,
             COALESCE(json_agg(json_build_object('id', u.id, 'username', u.username, 'displayName', u.display_name, 'role', cm.role))
               FILTER (WHERE u.id IS NOT NULL), '[]') AS members
        FROM conversations c
@@ -87,7 +90,7 @@ async function conversationForUser(userId, conversationId) {
 }
 
 function conversationJson(row) {
-  return { id: row.id, kind: row.kind, title: row.title, createdBy: row.created_by, createdAt: row.created_at, members: row.members || [] };
+  return { id: row.id, kind: row.kind, title: row.title, createdBy: row.created_by, createdAt: row.created_at, members: row.members || [], lastMessage: row.last_message || null };
 }
 
 async function messageRow(messageId) {
@@ -193,6 +196,9 @@ app.post('/v1/conversations', requireAuth, async (req, res) => {
 app.get('/v1/conversations', requireAuth, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT c.id, c.kind, c.title, c.created_by, c.created_at,
+       (SELECT json_build_object('body', lm.body, 'track', lm.track, 'senderUsername', lu.username)
+          FROM messages lm JOIN users lu ON lu.id = lm.sender_id
+         WHERE lm.conversation_id = c.id ORDER BY lm.created_at DESC, lm.id DESC LIMIT 1) AS last_message,
        (SELECT max(created_at) FROM messages m WHERE m.conversation_id = c.id) AS last_message_at,
        COALESCE((SELECT json_agg(json_build_object('id', u.id, 'username', u.username, 'displayName', u.display_name, 'role', cm2.role)) FROM conversation_members cm2 JOIN users u ON u.id = cm2.user_id WHERE cm2.conversation_id = c.id), '[]') AS members
       FROM conversations c JOIN conversation_members cm ON cm.conversation_id = c.id

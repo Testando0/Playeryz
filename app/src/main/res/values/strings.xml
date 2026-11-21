@@ -316,6 +316,9 @@
     <string name="independent_chat_add_member">Add member</string>
     <string name="independent_chat_add_member_description">Enter the username your friend shared with you.</string>
     <string name="independent_chat_add">Add</string>
+    <string name="independent_chat_you">You</string>
+    <string name="independent_chat_share_music">Share current song</string>
+    <string name="independent_chat_play_track">Tap to play in YumaPlayer</string>
     <string name="independent_chat_actions">Chat actions</string>
     <string name="independent_chat_empty_title">Your conversations</string>
     <string name="independent_chat_recent">Recent chats</string>
