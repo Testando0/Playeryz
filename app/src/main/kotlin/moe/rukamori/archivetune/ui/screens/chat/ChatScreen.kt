@@ -24,6 +24,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,15 +60,13 @@ import moe.rukamori.archivetune.chat.ChatViewModel
 @Composable
 internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel = hiltViewModel()) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    val clipboard = LocalClipboardManager.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     if (state.loggedIn) {
-                        Column {
-                            Text("@${state.username}", fontWeight = FontWeight.SemiBold)
-                            if (state.selected != null) Text(conversationTitle(state.selected), style = MaterialTheme.typography.labelSmall)
-                        }
+                        Text(if (state.selected == null) "@${state.username}" else conversationTitle(state.selected, state.username), fontWeight = FontWeight.SemiBold)
                     } else Text(stringResource(R.string.independent_chat_title))
                 },
                 navigationIcon = {
@@ -76,8 +76,18 @@ internal fun ChatScreen(navController: NavController, viewModel: ChatViewModel =
                 },
                 actions = {
                     if (state.loggedIn) {
+                        if (state.selected == null) {
+                            IconButton(onClick = { clipboard.setText(AnnotatedString("@${state.username}")) }) {
+                                Icon(painterResource(R.drawable.copy), contentDescription = stringResource(R.string.independent_chat_copy))
+                            }
+                        }
                         IconButton(onClick = viewModel::openActionsMenu) {
                             Icon(painterResource(R.drawable.more_vert), contentDescription = stringResource(R.string.independent_chat_actions))
+                        }
+                        DropdownMenu(expanded = state.showActionsMenu, onDismissRequest = viewModel::closeActionsMenu) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_new_private)) }, onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(false) })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_new_group)) }, onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(true) })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.independent_chat_logout), color = MaterialTheme.colorScheme.error) }, onClick = { viewModel.closeActionsMenu(); viewModel.logout() })
                         }
                     }
                 },
@@ -115,26 +125,14 @@ private fun LoginContent(state: ChatUiState, viewModel: ChatViewModel, modifier:
 private fun ChatContent(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
     if (state.selected == null) ConversationList(state, viewModel, modifier)
     else ConversationDetail(state, viewModel, modifier)
-    if (state.showActionsMenu) ActionMenuDialog(state, viewModel)
     if (state.showCreateDialog) CreateConversationDialog(state, viewModel)
     if (state.showAddMemberDialog) AddMemberDialog(state, viewModel)
 }
 
 @Composable
 private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
-    val clipboard = LocalClipboardManager.current
     Column(modifier.fillMaxSize()) {
-        Card(Modifier.fillMaxWidth().padding(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), shape = RoundedCornerShape(24.dp)) {
-            Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-                Avatar(state.username, Modifier.size(52.dp))
-                Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                    Text(state.displayName.ifBlank { state.username }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("@${state.username}", style = MaterialTheme.typography.bodyMedium)
-                    Text(stringResource(R.string.independent_chat_share_id), style = MaterialTheme.typography.bodySmall)
-                }
-                TextButton(onClick = { clipboard.setText(AnnotatedString("@${state.username}")) }) { Text(stringResource(R.string.independent_chat_copy)) }
-            }
-        }
+        Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp))
         if (state.conversations.isEmpty()) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.independent_chat_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -143,7 +141,7 @@ private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modif
         } else {
             Text(stringResource(R.string.independent_chat_recent), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
             LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(state.conversations, key = { it.id }) { conversation -> ConversationRow(conversation) { viewModel.selectConversation(conversation) } }
+                items(state.conversations, key = { it.id }) { conversation -> ConversationRow(conversation, state.username) { viewModel.selectConversation(conversation) } }
             }
         }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
@@ -155,9 +153,9 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, mod
     val conversation = state.selected ?: return
     Column(modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Avatar(conversationTitle(conversation), Modifier.size(42.dp))
+            Avatar(conversationTitle(conversation, state.username), Modifier.size(42.dp))
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(conversationTitle(conversation), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(conversationTitle(conversation, state.username), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(if (conversation.kind == "group") "${conversation.members.size} members" else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall)
             }
             if (conversation.kind == "group") TextButton(onClick = viewModel::openAddMemberDialog) { Text(stringResource(R.string.independent_chat_add_member)) }
@@ -178,22 +176,6 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, mod
         }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) }
     }
-}
-
-@Composable
-private fun ActionMenuDialog(state: ChatUiState, viewModel: ChatViewModel) {
-    AlertDialog(
-        onDismissRequest = viewModel::closeActionsMenu,
-        title = { Text(stringResource(R.string.independent_chat_actions)) },
-        text = {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(false) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.independent_chat_new_private), modifier = Modifier.fillMaxWidth()) }
-                TextButton(onClick = { viewModel.closeActionsMenu(); viewModel.openCreateDialog(true) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.independent_chat_new_group), modifier = Modifier.fillMaxWidth()) }
-                TextButton(onClick = { viewModel.closeActionsMenu(); viewModel.logout() }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.independent_chat_logout), color = MaterialTheme.colorScheme.error, modifier = Modifier.fillMaxWidth()) }
-            }
-        },
-        confirmButton = { TextButton(onClick = viewModel::closeActionsMenu) { Text(stringResource(R.string.cancel)) } },
-    )
 }
 
 @Composable
@@ -231,12 +213,12 @@ private fun AddMemberDialog(state: ChatUiState, viewModel: ChatViewModel) {
 }
 
 @Composable
-private fun ConversationRow(conversation: ChatConversation, onClick: () -> Unit) {
+private fun ConversationRow(conversation: ChatConversation, selfUsername: String, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), shape = RoundedCornerShape(20.dp)) {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Avatar(conversationTitle(conversation), Modifier.size(50.dp))
+            Avatar(conversationTitle(conversation, selfUsername), Modifier.size(50.dp))
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                Text(conversationTitle(conversation), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(conversationTitle(conversation, selfUsername), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(if (conversation.kind == "group") stringResource(R.string.independent_chat_group) else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.bodySmall)
             }
             Text("›", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -256,4 +238,8 @@ private fun BoxAvatar(letter: String, modifier: Modifier) {
     }
 }
 
-private fun conversationTitle(conversation: ChatConversation): String = conversation.title ?: conversation.members.joinToString(", ") { it.displayName.ifBlank { "@${it.username}" } }.ifBlank { "Conversation" }
+private fun conversationTitle(conversation: ChatConversation, selfUsername: String = ""): String {
+    if (!conversation.title.isNullOrBlank()) return conversation.title
+    val other = conversation.members.firstOrNull { it.username != selfUsername }
+    return other?.displayName?.ifBlank { "@${other.username}" } ?: other?.username?.let { "@$it" } ?: "Conversation"
+}
