@@ -121,7 +121,7 @@ internal fun FullPlayerCoverSlot(
                         toolbarTopInRoot = toolbarTopInRoot,
                         rootHeightPx = rootHeightPx,
                         capsuleHeaderHeightPx = capsuleHeaderHeightPx,
-                        extraLiftPx = 30.dp.toPx(),
+                        extraLiftPx = 40.dp.toPx(),
                         gapPx = 16.dp.toPx(),
                     )
                     transformOrigin = TransformOrigin(0.5f, 0f)

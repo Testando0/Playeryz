@@ -72,7 +72,7 @@ fun PlayerToolbar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(56.dp)
     ) {
         if (!state.isImmersiveEnabled) {
             Row(
