@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import moe.rukamori.archivetune.R
 import moe.rukamori.archivetune.chat.ChatConversation
 import moe.rukamori.archivetune.chat.ChatUiState
@@ -152,6 +154,12 @@ private fun ConversationList(state: ChatUiState, viewModel: ChatViewModel, modif
 @Composable
 private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, playerViewModel: PlayerViewModel, modifier: Modifier) {
     val conversation = state.selected ?: return
+    LaunchedEffect(conversation.id) {
+        while (true) {
+            delay(3000)
+            viewModel.refreshSelectedMessages()
+        }
+    }
     Column(modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Avatar(conversationTitle(conversation, state.username), Modifier.size(42.dp))
@@ -172,12 +180,15 @@ private fun ConversationDetail(state: ChatUiState, viewModel: ChatViewModel, pla
                             Column(Modifier.padding(horizontal = 15.dp, vertical = 10.dp)) {
                                 if (message.body.isNotBlank()) Text(message.body)
                                 message.track?.let { track ->
-                                    Row(Modifier.clickable { playerViewModel.handleDeepLinkAction(ParsedIntentAction.YouTubeVideo(track.id, null)) }, verticalAlignment = Alignment.CenterVertically) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(painterResource(R.drawable.music_note), contentDescription = null, modifier = Modifier.size(22.dp))
-                                        Column(Modifier.padding(start = 8.dp)) {
+                                        Column(Modifier.weight(1f).padding(start = 8.dp)) {
                                             Text(track.title, fontWeight = FontWeight.SemiBold)
                                             track.artist?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                                             Text(stringResource(R.string.independent_chat_play_track), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                        }
+                                        IconButton(onClick = { playerViewModel.handleDeepLinkAction(ParsedIntentAction.YouTubeVideo(track.id, null)) }) {
+                                            Icon(painterResource(R.drawable.play), contentDescription = stringResource(R.string.independent_chat_play_track_button))
                                         }
                                     }
                                 }

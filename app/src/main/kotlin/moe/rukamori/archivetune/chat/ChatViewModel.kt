@@ -113,6 +113,15 @@ internal class ChatViewModel @Inject constructor(
         }
     }
 
+    fun refreshSelectedMessages() {
+        val conversation = _state.value.selected ?: return
+        viewModelScope.launch {
+            runCatching { repository.messages(conversation.id) }.onSuccess { messages ->
+                _state.value = _state.value.copy(messages = messages)
+            }
+        }
+    }
+
     fun createConversation() {
         val snapshot = _state.value
         val members = snapshot.createMembers.split(',', '\n', ' ', ';').map { it.trim().removePrefix("@").lowercase() }.filter { it.isNotBlank() }.distinct()
