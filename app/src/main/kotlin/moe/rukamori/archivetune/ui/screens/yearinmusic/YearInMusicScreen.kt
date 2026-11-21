@@ -19,19 +19,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import moe.rukamori.archivetune.ui.screens.yearinmusic.YearInMusicViewModel
 
-internal val RecapBlack = Color(0xFF070707)
-internal val RecapSurfaceHigh = Color(0xFF1D1D1D)
-internal val RecapRed = Color(0xFFFF0033)
-internal val RecapRedDeep = Color(0xFFB60024)
-internal val RecapCream = Color(0xFFFFF7EF)
-internal val RecapYellow = Color(0xFFFFD447)
-internal val RecapGreen = Color(0xFF1ED760)
-internal val RecapPurple = Color(0xFF8A2CFF)
-internal val RecapBlue = Color(0xFF7CB7FF)
-internal val RecapSurface = Color(0xFF121212)
-internal val RecapPink = Color(0xFFFF8BDE)
-internal val RecapLime = Color(0xFFDFFF3E)
-internal val RecapInk = Color(0xFF151515)
+internal val RecapBlack = Color(0xFF422850)
+internal val RecapSurfaceHigh = Color(0xFFFFF5FA)
+internal val RecapRed = Color(0xFFE96AA9)
+internal val RecapRedDeep = Color(0xFF8666C8)
+internal val RecapCream = Color(0xFFFFFBF7)
+internal val RecapYellow = Color(0xFFFFD979)
+internal val RecapGreen = Color(0xFF65BFAE)
+internal val RecapPurple = Color(0xFFB9A3FF)
+internal val RecapBlue = Color(0xFFA8DFFF)
+internal val RecapSurface = Color(0xFFEDE0F8)
+internal val RecapPink = Color(0xFFFFB5D3)
+internal val RecapLime = Color(0xFFE7F46D)
+internal val RecapInk = Color(0xFF422850)
+internal val RecapMint = Color(0xFFA8E5D4)
+internal val RecapPeach = Color(0xFFFFC6A5)
 internal object RecapTokens {
     val SectionRadius = 24.dp
     val ItemRadius = 18.dp

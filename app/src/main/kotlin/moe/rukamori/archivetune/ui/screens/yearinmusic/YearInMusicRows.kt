@@ -61,7 +61,7 @@ internal fun RecapCardContent(
         Text(
             text = footer,
             style = MaterialTheme.typography.labelMedium,
-            color = RecapCream.copy(alpha = 0.58f),
+            color = RecapInk.copy(alpha = 0.62f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -77,10 +77,10 @@ internal fun HeroMetricTile(
         modifier =
             modifier
                 .clip(RoundedCornerShape(RecapTokens.SectionRadius))
-                .background(RecapCream.copy(alpha = 0.13f))
+                .background(RecapCream.copy(alpha = 0.70f))
                 .border(
                     width = 1.dp,
-                    color = RecapCream.copy(alpha = 0.14f),
+                    color = RecapCream.copy(alpha = 0.92f),
                     shape = RoundedCornerShape(RecapTokens.SectionRadius),
                 ).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -89,7 +89,7 @@ internal fun HeroMetricTile(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = RecapCream.copy(alpha = 0.66f),
+            color = RecapInk.copy(alpha = 0.62f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -97,7 +97,7 @@ internal fun HeroMetricTile(
             text = value,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Black,
-            color = RecapCream,
+            color = RecapInk,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -130,14 +130,14 @@ internal fun RankedArtistRow(
                 text = artist.artist.name,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = RecapCream,
+                color = RecapInk,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = makeTimeString(artist.timeListened?.toLong()),
                 style = MaterialTheme.typography.labelSmall,
-                color = RecapCream.copy(alpha = 0.58f),
+                color = RecapInk.copy(alpha = 0.62f),
                 maxLines = 1,
             )
         }
@@ -179,14 +179,14 @@ internal fun RankedAlbumRow(
                 text = album.album.title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = RecapCream,
+                color = RecapInk,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = artistNames.ifBlank { makeTimeString(album.timeListened) },
                 style = MaterialTheme.typography.labelSmall,
-                color = RecapCream.copy(alpha = 0.58f),
+                color = RecapInk.copy(alpha = 0.62f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -209,10 +209,10 @@ internal fun RankedRowContainer(
             modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(RecapTokens.ItemRadius))
-                .background(RecapSurfaceHigh.copy(alpha = 0.82f))
+                .background(RecapCream.copy(alpha = 0.72f))
                 .border(
                     width = 1.dp,
-                    color = RecapCream.copy(alpha = 0.08f),
+                    color = RecapCream.copy(alpha = 0.92f),
                     shape = RoundedCornerShape(RecapTokens.ItemRadius),
                 ).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

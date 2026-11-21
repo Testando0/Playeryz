@@ -52,10 +52,10 @@ internal fun SummaryRecapCard(
                     Brush.verticalGradient(
                         colors =
                             listOf(
-                                Color(0xFF7BA9FF),
-                                Color(0xFFD7E7FF),
-                                Color(0xFFE9B4FF),
-                                Color(0xFFFF6F8F),
+                                RecapBlue,
+                                RecapPurple,
+                                RecapPink,
+                                RecapPeach,
                             ),
                     ),
                 ).then(if (applySafeContentInsets) Modifier.windowInsetsPadding(WindowInsets.safeDrawing) else Modifier)
@@ -182,10 +182,10 @@ internal fun SummaryRankColumn(
                     Modifier
                         .size(118.dp)
                         .clip(imageShape)
-                        .background(Color.White.copy(alpha = 0.42f))
+                        .background(RecapCream.copy(alpha = 0.58f))
                         .border(
                             width = 2.dp,
-                            color = Color.White.copy(alpha = 0.72f),
+                            color = RecapCream.copy(alpha = 0.92f),
                             shape = imageShape,
                         ),
             )

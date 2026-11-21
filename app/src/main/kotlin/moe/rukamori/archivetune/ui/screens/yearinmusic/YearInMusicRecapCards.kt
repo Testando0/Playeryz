@@ -96,10 +96,10 @@ internal fun IntroRecapCard(
                     Brush.linearGradient(
                         colors =
                             listOf(
-                                Color(0xFF56C8F2),
-                                Color(0xFF77D77C),
+                                RecapPurple,
                                 RecapPink,
-                                Color(0xFFB7B5FF),
+                                RecapPeach,
+                                RecapYellow,
                             ),
                     ),
                 ).then(if (applySafeContentInsets) Modifier.windowInsetsPadding(WindowInsets.safeDrawing) else Modifier)
@@ -117,7 +117,7 @@ internal fun IntroRecapCard(
                     }.clip(RoundedCornerShape(18.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFFFFE569), RecapPink, Color(0xFFFF8A42)),
+                            colors = listOf(RecapYellow, RecapPink, RecapPurple),
                         ),
                     ),
         )
@@ -141,7 +141,7 @@ internal fun IntroRecapCard(
         }
 
         ArchiveTuneBrand(
-            contentColor = Color.White,
+            contentColor = RecapInk,
             modifier = Modifier.align(Alignment.TopStart),
         )
 
@@ -156,14 +156,14 @@ internal fun IntroRecapCard(
                 text = card.year.toString(),
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 76.sp),
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = RecapInk,
                 lineHeight = 70.sp,
             )
             Text(
                 text = stringResource(R.string.year_in_music_recap_word),
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = RecapInk,
                 lineHeight = 66.sp,
             )
         }
@@ -176,14 +176,14 @@ internal fun IntroRecapCard(
                 text = stringResource(R.string.year_in_music_intro_hero),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
-                color = Color.White,
+                color = RecapInk,
                 lineHeight = 30.sp,
             )
             Text(
                 text = stringResource(R.string.year_in_music_intro_details),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White.copy(alpha = 0.82f),
+                color = RecapInk.copy(alpha = 0.78f),
                 lineHeight = 19.sp,
             )
             Box(
@@ -191,7 +191,7 @@ internal fun IntroRecapCard(
                     Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(999.dp))
-                        .background(RecapInk)
+                        .background(RecapCream.copy(alpha = 0.78f))
                         .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -199,7 +199,7 @@ internal fun IntroRecapCard(
                     text = stringResource(R.string.year_in_music_swipe_begin),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
-                    color = Color.White,
+                    color = RecapInk,
                 )
             }
         }
@@ -229,7 +229,7 @@ internal fun TotalsRecapCard(
                 text = makeTimeString(card.totalListeningTime),
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 60.sp),
                 fontWeight = FontWeight.Black,
-                color = RecapYellow,
+                color = RecapInk,
                 lineHeight = 56.sp,
             )
         }
@@ -350,7 +350,7 @@ internal fun TopSongRecapCard(
                 RecapChip(
                     icon = R.drawable.timer,
                     text = makeTimeString(card.song.timeListened),
-                    color = RecapYellow,
+                    color = RecapInk,
                 )
             }
         }

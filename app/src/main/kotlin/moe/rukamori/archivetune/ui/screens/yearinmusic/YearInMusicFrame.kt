@@ -92,19 +92,19 @@ internal fun RecapCardFrame(
     val gradient =
         remember(card.id) {
             when (card) {
-                is YearInMusicRecapCard.Empty -> listOf(RecapSurfaceHigh, RecapBlack)
-                is YearInMusicRecapCard.Intro -> listOf(RecapRedDeep, RecapBlack, RecapSurface)
-                is YearInMusicRecapCard.Totals -> listOf(RecapRed, RecapBlack, RecapPurple.copy(alpha = 0.72f))
-                is YearInMusicRecapCard.TopSong -> listOf(RecapBlack, RecapRedDeep, RecapBlack)
-                is YearInMusicRecapCard.RankedArtists -> listOf(RecapBlack, RecapSurface, RecapRedDeep)
-                is YearInMusicRecapCard.RankedAlbums -> listOf(RecapRedDeep, RecapBlack, RecapSurface)
-                is YearInMusicRecapCard.Summary -> listOf(RecapBlack, RecapRedDeep, RecapPurple.copy(alpha = 0.78f))
+                is YearInMusicRecapCard.Empty -> listOf(RecapBlue, RecapPurple, RecapPink)
+                is YearInMusicRecapCard.Intro -> listOf(RecapPurple, RecapPink, RecapYellow)
+                is YearInMusicRecapCard.Totals -> listOf(RecapBlue, RecapCream, RecapMint)
+                is YearInMusicRecapCard.TopSong -> listOf(RecapPink, RecapPurple, RecapBlue)
+                is YearInMusicRecapCard.RankedArtists -> listOf(RecapYellow, RecapPink, RecapPeach)
+                is YearInMusicRecapCard.RankedAlbums -> listOf(RecapGreen, RecapBlue, RecapPurple)
+                is YearInMusicRecapCard.Summary -> listOf(RecapPink, RecapPurple, RecapBlue)
             }
         }
 
     Surface(
         modifier = modifier.clickable(enabled = canAdvance, onClick = onCardClick),
-        color = RecapBlack,
+            color = RecapCream,
     ) {
         Box(
             modifier =
@@ -182,12 +182,12 @@ internal fun RecapBackdrop(
                     colors =
                         if (enabled) {
                             listOf(
-                                RecapRed.copy(alpha = 0.38f),
-                                RecapPurple.copy(alpha = 0.22f),
-                                RecapBlack,
+                            RecapPink.copy(alpha = 0.28f),
+                            RecapPurple.copy(alpha = 0.20f),
+                            RecapBlue.copy(alpha = 0.32f),
                             )
                         } else {
-                            listOf(RecapBlack, RecapBlack)
+                            listOf(RecapCream, RecapCream)
                         },
                     radius = 1200f,
                 ),
@@ -202,9 +202,9 @@ internal fun RecapNoiseOverlay(modifier: Modifier = Modifier) {
                 Brush.linearGradient(
                     colors =
                         listOf(
-                            Color.White.copy(alpha = 0.05f),
+                            Color.White.copy(alpha = 0.22f),
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.18f),
+                            RecapInk.copy(alpha = 0.05f),
                         ),
                 ),
             ),

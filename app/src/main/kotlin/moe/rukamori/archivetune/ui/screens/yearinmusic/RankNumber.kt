@@ -77,7 +77,7 @@ internal fun RecapStatRow(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(RecapTokens.SectionRadius))
-                .background(RecapSurfaceHigh.copy(alpha = 0.72f))
+                .background(RecapCream.copy(alpha = 0.72f))
                 .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -95,7 +95,7 @@ internal fun RecapStatRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = RecapCream.copy(alpha = 0.58f),
+                color = RecapInk.copy(alpha = 0.62f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -103,7 +103,7 @@ internal fun RecapStatRow(
                 text = value,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = RecapCream,
+                color = RecapInk,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -135,11 +135,11 @@ internal fun RecapChip(
             tint = color,
             modifier = Modifier.size(16.dp),
         )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = RecapCream,
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = RecapInk,
             maxLines = 1,
         )
     }
@@ -150,10 +150,10 @@ internal fun RecapBadge(text: String) {
         modifier =
             Modifier
                 .clip(RoundedCornerShape(999.dp))
-                .background(RecapCream.copy(alpha = 0.14f))
+                .background(RecapCream.copy(alpha = 0.72f))
                 .border(
                     width = 1.dp,
-                    color = RecapCream.copy(alpha = 0.16f),
+                    color = RecapCream.copy(alpha = 0.92f),
                     shape = RoundedCornerShape(999.dp),
                 ).padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -170,7 +170,7 @@ internal fun RecapBadge(text: String) {
             text = text,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Black,
-            color = RecapCream,
+            color = RecapInk,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
