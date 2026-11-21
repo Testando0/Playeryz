@@ -47,7 +47,6 @@ internal fun PlayerMenuActionGrid(
     context: Context,
     onSpeedDialSongIdsChange: (String) -> Unit,
     onShowChoosePlaylistDialog: () -> Unit,
-    onShowSendToChatDialog: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     MenuSurfaceSection(modifier = Modifier.padding(vertical = 6.dp)) {
@@ -114,20 +113,6 @@ internal fun PlayerMenuActionGrid(
                                 onSpeedDialSongIdsChange(serializeSpeedDialPins(updatedPins))
                                 onDismiss()
                             },
-                        ),
-                    )
-                    add(
-                        NewAction(
-                            icon = {
-                                Icon(
-                                    painter = painterResource(R.drawable.music_note),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(28.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            },
-                            text = stringResource(R.string.independent_chat_send_song),
-                            onClick = onShowSendToChatDialog,
                         ),
                     )
                     add(

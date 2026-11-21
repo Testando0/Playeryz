@@ -83,7 +83,6 @@ internal fun PlayerMenuContent(
                 context = context,
                 onSpeedDialSongIdsChange = onSpeedDialSongIdsChange,
                 onShowChoosePlaylistDialog = onShowChoosePlaylistDialog,
-                onShowSendToChatDialog = onShowSendToChatDialog,
                 onDismiss = onDismiss,
             )
         }
@@ -109,22 +108,21 @@ internal fun PlayerMenuContent(
             }
         }
 
-        if (!isLocalMedia) {
-            item {
-                PlayerMenuDownloadSection(
-                    download = download,
-                    mediaMetadata = mediaMetadata,
-                    externalDownloaderEnabled = externalDownloaderEnabled,
-                    externalDownloaderPackage = externalDownloaderPackage,
-                    database = database,
-                    context = context,
-                    onDismiss = onDismiss,
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+        item {
+            PlayerMenuDownloadSection(
+                download = download,
+                mediaMetadata = mediaMetadata,
+                isLocalMedia = isLocalMedia,
+                externalDownloaderEnabled = externalDownloaderEnabled,
+                externalDownloaderPackage = externalDownloaderPackage,
+                database = database,
+                context = context,
+                onShowSendToChatDialog = onShowSendToChatDialog,
+                onDismiss = onDismiss,
+            )
+        }
+        item {
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         item {
