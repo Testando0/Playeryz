@@ -24,6 +24,7 @@ import moe.rukamori.archivetune.ui.screens.settings.AppearanceContract
 import moe.rukamori.archivetune.ui.screens.settings.AppearanceSettings
 import moe.rukamori.archivetune.ui.screens.settings.BackupAndRestore
 import moe.rukamori.archivetune.ui.screens.settings.ChangelogScreen
+import moe.rukamori.archivetune.ui.screens.chat.ChatScreen
 import moe.rukamori.archivetune.ui.screens.settings.ContentSettings
 import moe.rukamori.archivetune.ui.screens.settings.DebugSettings
 import moe.rukamori.archivetune.ui.screens.settings.DiscordSettings
@@ -104,6 +105,9 @@ internal fun NavGraphBuilder.settingsNavigationRoutes(
     }
     composable("settings/music_together") {
         MusicTogetherScreen(navController)
+    }
+    composable("chat") {
+        ChatScreen(navController)
     }
     composable("settings/lastfm") {
         LastFMSettings(navController)

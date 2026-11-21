@@ -212,7 +212,7 @@ fun ScaffoldTopAppBar(
                     hasUpdate = hasUpdate,
                     onNavigateProfile = { navController.navigate("account") },
                     onNavigateHistory = { navController.navigate("history") },
-                    onNavigateChat = { navController.navigate("settings/music_together") },
+                    onNavigateChat = { navController.navigate("chat") },
                     onNavigateNews = { navController.navigate("news") },
                     onNavigateNewRelease = { navController.navigate("new_release") },
                     onNavigateSettings = { navController.navigate("settings") },

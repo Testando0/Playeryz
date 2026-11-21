@@ -1,0 +1,141 @@
+package moe.rukamori.archivetune.ui.screens.chat
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import moe.rukamori.archivetune.R
+import moe.rukamori.archivetune.chat.ChatConversation
+import moe.rukamori.archivetune.chat.ChatViewModel
+
+@Composable
+internal fun ChatScreen(
+    navController: NavController,
+    viewModel: ChatViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.independent_chat_title)) },
+                navigationIcon = {
+                    IconButton(onClick = navController::navigateUp) {
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                    }
+                },
+                actions = {
+                    if (state.loggedIn) TextButton(onClick = viewModel::logout) { Text(stringResource(R.string.independent_chat_logout)) }
+                },
+            )
+        },
+    ) { padding ->
+        if (!state.loggedIn) {
+            LoginContent(state, viewModel, Modifier.padding(padding))
+        } else {
+            ChatContent(state, viewModel, Modifier.padding(padding))
+        }
+    }
+}
+
+@Composable
+private fun LoginContent(state: moe.rukamori.archivetune.chat.ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(stringResource(if (state.registerMode) R.string.independent_chat_create_account else R.string.independent_chat_sign_in), style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(20.dp))
+        OutlinedTextField(state.username, viewModel::updateUsername, label = { Text(stringResource(R.string.independent_chat_username)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        if (state.registerMode) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(state.displayName, viewModel::updateDisplayName, label = { Text(stringResource(R.string.independent_chat_display_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(state.password, viewModel::updatePassword, label = { Text(stringResource(R.string.independent_chat_password)) }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done), modifier = Modifier.fillMaxWidth())
+        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 12.dp)) }
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = viewModel::authenticate, enabled = !state.loading, modifier = Modifier.fillMaxWidth()) {
+            if (state.loading) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text(stringResource(if (state.registerMode) R.string.independent_chat_register else R.string.independent_chat_login))
+        }
+        TextButton(onClick = viewModel::toggleRegister) { Text(stringResource(if (state.registerMode) R.string.independent_chat_have_account else R.string.independent_chat_need_account)) }
+    }
+}
+
+@Composable
+private fun ChatContent(state: moe.rukamori.archivetune.chat.ChatUiState, viewModel: ChatViewModel, modifier: Modifier) {
+    Column(modifier.fillMaxSize()) {
+        if (state.conversations.isEmpty()) {
+            Text(stringResource(R.string.independent_chat_no_conversations), modifier = Modifier.padding(20.dp))
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(state.conversations, key = { it.id }) { conversation ->
+                    ConversationRow(conversation, selected = conversation.id == state.selected?.id) { viewModel.selectConversation(conversation) }
+                }
+                item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
+                items(state.messages, key = { it.id }) { message ->
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                        Text(message.senderName, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Card(shape = RoundedCornerShape(16.dp)) { Text(message.body, modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) }
+                        message.trackTitle?.let { Text("♫ $it", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp, top = 2.dp)) }
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(value = state.draft, onValueChange = viewModel::updateDraft, placeholder = { Text(stringResource(R.string.independent_chat_message_hint)) }, singleLine = true, modifier = Modifier.weight(1f))
+                TextButton(onClick = viewModel::send, enabled = state.draft.isNotBlank()) { Text(stringResource(R.string.independent_chat_send)) }
+            }
+        }
+        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+    }
+}
+
+@Composable
+private fun ConversationRow(conversation: ChatConversation, selected: Boolean, onClick: () -> Unit) {
+    val title = conversation.title ?: conversation.members.joinToString(", ") { it.displayName.ifBlank { it.username } }
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer)) {
+        Column(Modifier.padding(14.dp)) {
+            Text(title.ifBlank { stringResource(R.string.independent_chat_conversation) }, style = MaterialTheme.typography.titleMedium)
+            Text(if (conversation.kind == "group") stringResource(R.string.independent_chat_group) else stringResource(R.string.independent_chat_private), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
