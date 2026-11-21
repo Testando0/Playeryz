@@ -25,7 +25,7 @@ internal fun rememberCoverPlayPauseScale(
     disabled: Boolean = false,
 ): State<Float> {
     return animateFloatAsState(
-        targetValue = if (disabled || isPlaying) 1.0f else 0.84f,
+        targetValue = 1.0f,
         animationSpec = spring(
             dampingRatio = 0.55f,
             stiffness = 350f,
