@@ -53,8 +53,8 @@ android {
     applicationId = "com.Redzin.REDMUSIC"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "1.2.0-RC.7"
+        versionCode = 11
+        versionName = "1.2.0-RC.10"
 
         manifestPlaceholders["appName"] = "@string/app_name"
 
